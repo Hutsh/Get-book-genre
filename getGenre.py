@@ -71,6 +71,12 @@ def getGenre(ISBN):
         #genre = re.subn(r'(^[\s,]+)|[\s,]+|(ISBN.*)|Books', ',', genreraw)[0]
         genre = re.subn(r'(^,+)|,+$', '', genre)[0]
         genre = re.subn(r',+', ',', genre)[0]
+        genre = re.subn(r'Subject:,', '', genre)[0]# for subject:,
+        genre = re.subn(r' > ', ',', genre)[0]
+        genre = re.subn(r'FICTION', 'Fiction', genre)[0]  #,([a-zA-Z0-9:()]+\s?){3,}$
+        genre = re.subn(r',([a-zA-Z0-9:()\']+\s?){3,}$', '', genre)[0]
+        genre = re.subn(r' - .*$', '', genre)[0]
+        genre = re.subn(r'/', ',', genre)[0]
         waittimes = 0
         if genre == '':
             return 'NA'
