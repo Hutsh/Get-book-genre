@@ -3,13 +3,15 @@ import requests
 import random
 import string
 import time
+import bs4 as BeautifulSoup
+
 
 waittimes = 0
 
 
 def start():
-    dataPath = r'E:\PITT\2018Spring\Algorithm\Project\books2.txt'
-    outpath = r'E:\PITT\2018Spring\Algorithm\Project\booksout.txt'
+    dataPath = r'books2.txt'
+    outpath = r'booksout.txt'
     out = open(outpath, 'w')
 
     with open(dataPath, 'r') as f:
@@ -27,8 +29,8 @@ def start():
 def getGenre(ISBN):
     urlpre = r'https://www.alibris.com/booksearch?keyword='
     pattern = re.compile(r'red\/home.gif.+?<li>.+?<li>\s+?<a.+?>(.+?)<\/a>')
-    psub1 = re.compile(r'red.+">')
-    psub2 = re.compile(r'</a>')
+    #psub1 = re.compile(r'red.+">')
+    #psub2 = re.compile(r'</a>')
     highvolpattern = re.compile(r'due to the high volume of visitors')
     headers = {
         'User-Agent': 'Mozilla/5.0 (compatible; WOW64; MSIE 10.0; Windows NT 6.2)',
@@ -54,15 +56,26 @@ def getGenre(ISBN):
     url = urlpre + ISBN + r'&mtype=B'
     html = requests.get(url, headers=headers)
     text = html.text
+    soup = BeautifulSoup(html.text)
+
+
 
     match = pattern.search(text)
     global waittimes
     if match:
-        m = match.group()
-        m = psub1.sub('', m)
-        m = psub2.sub('', m)
+        bookpath = soup.find('ul', class_="path")
+        genreraw = ''
+        for tags in bookpath.strings:
+            genreraw = genreraw + tags + '\n'
+        genre = re.subn(r'(\n\s)+|(\s\n)+|(\n+)|(ISBN.*)|(,\s)+|(\s,)+|Books', ',', genreraw)[0]
+        #genre = re.subn(r'(^[\s,]+)|[\s,]+|(ISBN.*)|Books', ',', genreraw)[0]
+        genre = re.subn(r'(^,+)|,+$', '', genre)[0]
+        genre = re.subn(r',+', ',', genre)[0]
         waittimes = 0
-        return m
+        if genre == '':
+            return 'NA'
+        else:
+            return genre
     else:
         highvol = highvolpattern.search(text)
 
@@ -88,5 +101,15 @@ def getGenre(ISBN):
 if __name__ == "__main__":
     start()
     #print(getGenre('9780140283330'))
-
+    #url = urlpre + ISBN + r'&mtype=B'
+    #html = requests.get(url, headers=headers)
+    #text = html.text
+    #soup = BeautifulSoup(html.text)
+    #bookpath = soup.find('ul', class_="path")
+    # g = ''
+    #for s in bookpath.strings:
+    #   g = g + s + '\n'
+    #res = re.subn(r'(\n\s)+|(\s\n)+|(\n+)|(ISBN.*)|(,\s)+|(\s,)+|Books', ',', g)[0]
+    #res = re.subn(r'(^,+)|,+$','',res)[0]
+    #判断res是不是空
 
